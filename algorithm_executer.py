@@ -2,7 +2,7 @@ import time
 import my_globals
 import evaluation_metrics
 import cdlib.evaluation as eval
-import community_detection as my
+import community_detection as gravitational
 import copy
 
 from cdlib import algorithms, NodeClustering
@@ -30,14 +30,14 @@ def run_algorithm(nxG, algorithm_name, real_communities=None):
     
     originalG = copy.deepcopy(nxG)
     
-    if algorithm_name == "my":
+    if algorithm_name == "gravitational":
         start_time = time.perf_counter()
-        predicted_communities = my.my_algorithm_overlapping_communities(nxG)
+        predicted_communities = gravitational.overlapping_community_detection(nxG)
         end_time = time.perf_counter()
         predicted_clusters = NodeClustering(predicted_communities, graph=None)
-    elif algorithm_name == "my_disjoint":
+    elif algorithm_name == "gravitational_disjoint":
         start_time = time.perf_counter()
-        predicted_communities = my.my_algorithm_disjoint_communities(nxG)
+        predicted_communities = gravitational.disjoint_community_detection(nxG)
         end_time = time.perf_counter()
         predicted_clusters = NodeClustering(predicted_communities, graph=None)
     else:
@@ -57,11 +57,10 @@ def run_algorithm(nxG, algorithm_name, real_communities=None):
     # Set number of communities    
     result.number_of_pred_communities = len(predicted_communities)
 
-    # Set Shen modularity
+    # Set modularities
     result.shen_modularity = evaluation_metrics.shen_modularity(originalG, predicted_communities)
     result.qoc = evaluation_metrics.qoc(originalG, predicted_communities)
-         
-    
+             
     # Set NMI, Omega and F-score
     if real_communities:
         result.real_communities = real_communities

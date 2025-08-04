@@ -27,42 +27,26 @@ def read_graph(file_name):
     elif file_type == "edgelist":
         nxG = read_edgelist(file_name)
 
-    # mapping işlemi kaldırıldı, orijinal node ID'ler kullanılıyor
     for node in nxG.nodes():
-        nxG.nodes[node]["label"] = node  # node ID'yi label olarak sakla
+        nxG.nodes[node]["label"] = node  # to use id as the label of node
 
     edge_list = [(u, v, d.get("weight", 1.0)) for u, v, d in nxG.edges(data=True)]
     igG = ig.Graph.TupleList(edge_list, directed=False, weights=True)
 
-    # mapping yine oluşturulabilir ama artık kullanılmayacak
-    mapping = {node: idx for idx, node in enumerate(nxG.nodes())}
-
-    return nxG, igG, mapping
+    return nxG, igG
 
 
 def read_graph_and_layout(file_path):
-    nx_graph, ig_graph, mapping = read_graph(file_path)
+    nx_graph, ig_graph = read_graph(file_path)
     layout = ig_graph.layout("kk")
-    return nx_graph, ig_graph, layout, mapping
+    return nx_graph, ig_graph, layout
 
-def read_communities(file_path, mapping=None):
+def read_communities(file_path):
     with open(file_path, "r") as file:
         lines = file.readlines()
     communities = eval(lines[0])
 
-    if mapping is None:
-        return communities
-
-    new_communities = []
-    for community in communities:
-        new_community = []
-        for node in community:
-            if node in mapping:
-                new_community.append(node)  # mapping iptal edildi, orijinal ID ile kullan
-        new_communities.append(new_community)
-
-    return new_communities
-
+    return communities
 
 def read_datasets():
     directory = f"{directory_manager.PROJECT_DIRECTORY}/Data/{my_globals.dataset_type_to_string[my_globals.SELECTED_DATASET_TYPE]}"
@@ -76,12 +60,12 @@ def read_datasets():
             dataset.directory = file_path
             dataset.name, _ = os.path.splitext(file_name)
 
-            dataset.nx_graph, dataset.ig_graph, mapping = read_graph(file_path)
-            # dataset.layout = dataset.ig_graph.layout("kk")
+            dataset.nx_graph, dataset.ig_graph = read_graph(file_path)
+            dataset.layout = dataset.ig_graph.layout("kk")
 
             communities_file_path = os.path.splitext(file_path)[0] + ".dat"
             if os.path.exists(communities_file_path):
-                dataset.real_communities = read_communities(communities_file_path, None)  # mapping kullanma
+                dataset.real_communities = read_communities(communities_file_path)
 
             datasets.append(dataset)
 

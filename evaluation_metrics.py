@@ -1,67 +1,16 @@
-from cdlib import NodeClustering
 import numpy as np
-
-def my_modularity(graph, communities):
-    """
-    Klasik modülerlik (disjoint, yönsüz, ağırlıksız).
-    Formül: Q = (m + in_edge - out_edge) / (2m)
-    Sadece ayrık topluluklar için uygundur.
-    """
-    communities = NodeClustering(communities, graph=graph)
-    if len(communities.communities) == 1:
-        return 0
-
-    communities = communities.to_node_community_map()
-
-    edge_list = graph.edges()
-    m = len(edge_list)
-
-    in_edge = 0
-    out_edge = 0
-
-    for (u, v) in edge_list:
-        if len(set(communities[v]).intersection(set(communities[u]))) > 0:
-            in_edge = in_edge + 1
-        else:
-            out_edge = out_edge + 1
-
-    my_modularity_score = (m + in_edge - out_edge)/(2*m)
-
-    return my_modularity_score
-
-
-# Modularity (ağırlıklı)
-def modularity_weighted(G, communities):
-    """
-    Weighted Modularity (ağırlıklı, yönsüz, ayrık).
-    Formül: Q = sum(A_uv - (k_u*k_v)/(2m)) / (2m)
-    Sadece ayrık topluluklar için uygundur.
-    """
-    m = G.size(weight="weight")
-    degrees = dict(G.degree(weight="weight"))
-    Q = 0.0
-    for community in communities:
-        for u in community:
-            for v in community:
-                if u == v:
-                    continue
-                # A_uv = G[u][v]['weight'] if G.has_edge(u, v) else 0
-                A_uv = G[u][v].get('weight', 1.0) if G.has_edge(u, v) else 0
-
-                Q += A_uv - (degrees[u] * degrees[v]) / (2 * m)
-    return Q / (2 * m) if m > 0 else 0
 
 def shen_modularity(G, communities):
     """
-    Normalize edilmiş Shen modularity.
-    Overlapping topluluklar ve ağırlıklı, yönsüz graf için uygundur.
+    Normalized Shen modularity.
+    Suitable for overlapping communities and weighted, undirected graphs.
 
     Q = (1 / 2m) * sum_i sum_{v,w in C_i} [ (1 / (O_v * O_w)) * (A_vw - (k_v * k_w)/(2m)) ]
     """
     m = G.size(weight='weight')
     degrees = dict(G.degree(weight='weight'))
 
-    # Her düğümün kaç topluluğa ait olduğunu hesapla
+    # Calculate the number of communities each node belongs to
     node_membership_count = {}
     for community in communities:
         for node in community:
@@ -94,12 +43,12 @@ def compute_fuzzy_membership(communities):
     membership = {}
     node_community_counts = {}
 
-    # Adım 1: Hangi düğüm kaç topluluğa ait?
+    # Step 1: Calculate the number of communities each node belongs to
     for cid, comm in enumerate(communities):
         for node in comm:
             node_community_counts[node] = node_community_counts.get(node, 0) + 1
 
-    # Adım 2: Üyelik değeri = 1 / toplam topluluk sayısı (eşit böl)
+    # Assign a membership value of 1 / total communities of the node (assuming equal membership)
     for cid, comm in enumerate(communities):
         for node in comm:
             if node not in membership:
@@ -112,9 +61,9 @@ def compute_fuzzy_membership(communities):
 def qoc(nxG, communities):
     """
     communities: List[Set[int]]
-    G: networkx ağı (ağırlıklı veya ağırlıksız)
+    G: a NetworkX graph (can be weighted or unweighted)
 
-    Otomatik fuzzy membership çıkarır ve Q_oc fuzzy hesaplar
+    Automatically extracts fuzzy memberships and calculates the fuzzy Q_oc modularity.
     """
     m = nxG.size(weight='weight')
     degrees = dict(nxG.degree(weight='weight'))
@@ -132,7 +81,7 @@ def qoc(nxG, communities):
             mu_i = fuzzy_membership.get(i, {})
             mu_j = fuzzy_membership.get(j, {})
 
-            # Ortak topluluklara göre min(μ)^0.5 içinden maksimumu bul
+            # select the maximum of sqrt(min(μ)) according to common communities
             max_term = 0.0
             for c in set(mu_i) & set(mu_j):
                 val = np.sqrt(min(mu_i[c], mu_j[c]))
@@ -142,47 +91,3 @@ def qoc(nxG, communities):
 
     Qoc /= (2 * m)
     return Qoc
-
-
-
-# #----------------metrics için kullanılacak-------------------------
-
-# # Inclusion Rate hesaplama
-# def inclusion_rate(true_partition, pred_partition):
-#     """
-#     Inclusion Rate (overlapping, ağırlıksız, yönsüz).
-#     Formül: max_precision * |Ri| / toplam |Ri|
-#     Hem ayrık hem örtüşen topluluklar için uygundur.
-#     """
-#     inclusion_rates = []
-#     for Ri in pred_partition:
-#         max_precision = max(len(set(Ri).intersection(set(Gj))) / len(Ri) for Gj in true_partition)
-#         inclusion_rates.append(max_precision * len(Ri))
-#     return sum(inclusion_rates) / sum(len(Ri) for Ri in pred_partition)
-
-# # Coverage Rate hesaplama
-# def coverage_rate(true_partition, pred_partition):
-#     """
-#     Coverage Rate (overlapping, ağırlıksız, yönsüz).
-#     Formül: max_recall * |Gj| / toplam |Gj|
-#     Hem ayrık hem örtüşen topluluklar için uygundur.
-#     """
-#     coverage_rates = []
-#     for Gj in true_partition:
-#         max_recall = max(len(set(Ri).intersection(set(Gj))) / len(Gj) for Ri in pred_partition)
-#         coverage_rates.append(max_recall * len(Gj))
-#     return sum(coverage_rates) / sum(len(Gj) for Gj in true_partition)
-
-
-# # Güncellenmiş F Updated hesaplama
-# def f_updated(true_partition, pred_partition):
-#     """
-#     F-updated (overlapping, ağırlıksız, yönsüz).
-#     Formül: 2 * inclusion * coverage / (inclusion + coverage)
-#     Hem ayrık hem örtüşen topluluklar için uygundur.
-#     """
-#     inclusion = inclusion_rate(true_partition, pred_partition)
-#     coverage = coverage_rate(true_partition, pred_partition)
-#     return (2 * inclusion * coverage) / (inclusion + coverage) if inclusion > 0 and coverage > 0 else 0
-
-

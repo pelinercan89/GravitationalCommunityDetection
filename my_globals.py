@@ -7,8 +7,8 @@ ALL_ALGORITHMS = {
     "ego_networks": "Ego Networks",
     "lpanni": "LPANNI",
     "core_expansion": "Core Expansion",
-    "my": "Proposed",
-    "my_disjoint": "Proposed Disjoint"
+    "gravitational": "Gravitational",
+    "gravitational_disjoint": "Gravitational Disjoint"
 }
 SELECTED_ALGORITHMS = {}
 SELECTED_DATASET_TYPE = None
@@ -62,7 +62,7 @@ class Result:
             f"{self.shen_modularity:.2f}",
             f"{self.qoc:.2f}",
         ]
-        column_widths = [15, 12, 16, 10, 15, 15]
+        column_widths = [15, 25, 10, 10, 10, 10]
     
         if include_comparison_metrics:
             data += [
@@ -71,7 +71,7 @@ class Result:
                 f"{self.omega:.2f}",
                 f"{self.f_score:.2f}",
             ]
-            column_widths += [16, 10, 10, 10]
+            column_widths += [10, 10, 10, 10]
     
         print("".join(f"{d:<{w}}" for d, w in zip(data, column_widths)))
 
@@ -79,15 +79,13 @@ def print_header(include_comparison_metrics=True):
     headers = [
         "dataset", "algorithm", "pred_coms", "runtime", "Q_shen", "Q_oc"
     ]
-    column_widths = [15, 12, 16, 10, 15, 15]
+    column_widths = [15, 25, 10, 10, 10, 10]
 
     if include_comparison_metrics:
         headers += ["real_coms", "nmi_lfk", "omega", "f1_score"]
-        column_widths += [16, 10, 10, 10]
+        column_widths += [10, 10, 10, 10]
 
     print("".join(f"{h:<{w}}" for h, w in zip(headers, column_widths)))
-
-
 
 def select_algorithms(algorithm_keys): 
     for key in algorithm_keys: 

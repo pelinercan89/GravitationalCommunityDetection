@@ -20,8 +20,8 @@ def main():
     datasets = reader.read_datasets()    
 
     # Select algorithms
-    # algorithm_keys_to_select = ["my"]#"ego_networks"] 
-    algorithm_keys_to_select = ["my_disjoint"]#"ego_networks"] 
+    # algorithm_keys_to_select = ["gravitational"]#"ego_networks"] 
+    algorithm_keys_to_select = ["gravitational_disjoint"]#"ego_networks"] 
     
     my_globals.select_algorithms(algorithm_keys_to_select)
     #my_globals.select_all_algorithms()
@@ -34,7 +34,6 @@ def main():
     # Run algorşthm on datasets
     results = algorithm_executer.run_algorithms_on_datasets(datasets)
     
-   
     # Plot graphs (Only call if the graphs are of a size that can be visually examined)
     # plotter.plot_graphs(datasets, results)
         

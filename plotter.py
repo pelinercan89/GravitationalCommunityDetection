@@ -17,7 +17,7 @@ def save_predicted_networks(results):
         output_file = f"{directory_manager.OUTPUT_DIRECTORY}/{result.algorithm_name}/predicted/{result.algorithm_name}_{result.dataset_name}.png"
         clusters = ig.VertexCover(result.ig_graph, clusters=result.predicted_communities)
         
-        vertex_labels = result.ig_graph.vs["label"] if "label" in result.ig_graph.vs.attributes() else result.ig_graph.vs["_nx_name"]
+        vertex_labels = result.ig_graph.vs["label"] if "label" in result.ig_graph.vs.attributes() else result.ig_graph.vs["name"]
         edge_labels = result.ig_graph.es["weight"] if "weight" in result.ig_graph.es.attributes() else None
         ig.plot(clusters, output_file, **visual_style, mark_groups=True, inline=True, vertex_label=vertex_labels, layout=result.layout,edge_label=edge_labels)
 
@@ -27,8 +27,8 @@ def save_original_networks(datasets):
         output_file = f"{directory_manager.OUTPUT_DIRECTORY}/original/{dataset.name}.png"
         clusters = ig.VertexCover(dataset.ig_graph, clusters=dataset.real_communities)
         
-        vertex_labels = dataset.ig_graph.vs["label"] if "label" in dataset.ig_graph.vs.attributes() else dataset.ig_graph.vs["_nx_name"]
-        edge_labels = dataset.ig_graph.es["weight"] if "w" in dataset.ig_graph.es.attributes() else None
+        vertex_labels = dataset.ig_graph.vs["label"] if "label" in dataset.ig_graph.vs.attributes() else dataset.ig_graph.vs["name"]
+        edge_labels = dataset.ig_graph.es["weight"] if "weight" in dataset.ig_graph.es.attributes() else None
         ig.plot(clusters, output_file, **visual_style, mark_groups=True, inline=True, vertex_label=vertex_labels, layout=dataset.layout, edge_label=edge_labels)
 
 def plot_bar_chart(ax, X, data, colors, x_labels, y_label, file_name):
@@ -55,8 +55,8 @@ def plot_bar_chart(ax, X, data, colors, x_labels, y_label, file_name):
     plt.show()
 
 def plot_data(results, datasets):
-    metrics = ['qoc_modularity', 'mgh_nmi', 'f_score', 'my_modularity', 'runtime']
-    y_labels = ['Modülarite', 'NMI', 'F-Skor', 'Kapsama', 'Çalışma Zamanı (ms)']
+    metrics = ['qoc', 'nmi_lfk', 'f_score', 'shen_modularity', 'runtime']
+    y_labels = ['Modülarite', 'NMI', 'F-Skor', 'Shen Modülarite', 'Çalışma Zamanı (ms)']
     file_names = ['modularity_results.png', 'NMI_results.png', 'f_score_results.png', 'my_modularity_results.png', 'runtime_results.png']
     
     my_dict = {algorithm_name: {metric: [] for metric in metrics} for algorithm_name in my_globals.SELECTED_ALGORITHMS.keys()}
@@ -106,10 +106,11 @@ def plot_images_table(results):
             ax = axes[i, j + 1]
             predicted_img_path = f"{directory_manager.OUTPUT_DIRECTORY}/{algorithm_name}/predicted/{algorithm_name}_{dataset_name}.png"
             texts = {
-                'Modularity': results[(dataset_name, algorithm_name)].shen_modularity,
-                'NMI': results[(dataset_name, algorithm_name)].mgh_nmi,
-                'F-Score': results[(dataset_name, algorithm_name)].f_score,
-                'Coverage': results[(dataset_name, algorithm_name)].my_modularity
+                'Q_Shen': results[(dataset_name, algorithm_name)].shen_modularity,
+                'Q_oc': results[(dataset_name, algorithm_name)].qoc,
+                'NMI_LFK': results[(dataset_name, algorithm_name)].nmi_lfk,
+                'Omega': results[(dataset_name, algorithm_name)].omega,
+                'F-Score': results[(dataset_name, algorithm_name)].f_score
             }
             plot_image_subplot(ax, predicted_img_path, title=algorithm_name, texts=texts)
     

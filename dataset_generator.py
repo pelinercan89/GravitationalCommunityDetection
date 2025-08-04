@@ -1,5 +1,4 @@
 import os, subprocess, shutil, psutil, sys
-import math
 import directory_manager
 
 target = directory_manager.PROJECT_DIRECTORY + "/Data/LFRbenchmark/"
@@ -49,11 +48,7 @@ def convert_network_file_to_my_format(dataset_id):
                 continue
             words = line.split()
             if int(words[0]) < int(words[1]):
-                # Ağırlık kontrolü yap ve 0'dan küçükse -1 ile çarp
-                weight = math.ceil(float(words[2]))
-                if weight < 0.1:
-                    weight = 0.1  # Negatif ağırlığı pozitif yap
-                file.write(f"{int(words[0])-1} {int(words[1])-1} {round(weight, 2)}\n")
+                file.write(f"{int(words[0])-1} {int(words[1])-1} {round(float(words[2]), 2)}\n")
  
 def  convert_community_file_to_my_format(dataset_id):
     #convert to community list and starts from 0
@@ -79,18 +74,7 @@ def convert_generated_files_into_my_format(dataset_id):
     convert_network_file_to_my_format(dataset_id)
     convert_community_file_to_my_format(dataset_id)
 
-
-def create_test_set(num_tests, num_nodes, avg_degree, max_degree, mix_param, num_overlapped_nodes, membership_overlapped_nodes):
-    """
-    num_tests: Kaç test seti oluşturulacak
-    num_nodes: Düğüm sayısı
-    avg_degree: Ortalama derece
-    max_degree: Maksimum düğüm derecesi
-    mix_param: Karışım parametresi
-    num_overlapped_nodes: Örtüşen düğüm sayısı
-    membership_overlapped_nodes: Örtüşen düğümlerin topluluk sayısı
-    """
-    
+def create_test_set(num_tests, num_nodes, avg_degree, max_degree, mix_param, num_overlapped_nodes, membership_overlapped_nodes):    
     for dataset_index in range(1, num_tests + 1):
         create_dataset_with_command(dataset_index, num_nodes, avg_degree, max_degree, mix_param, num_overlapped_nodes, membership_overlapped_nodes)
         convert_generated_files_into_my_format(dataset_index)
@@ -101,15 +85,13 @@ def generate_configured_datasets(enableOverlap):
     
     if enableOverlap:
         test_configs = [
-            # (num_tests, num_nodes, avg_degree, max_degree, mix_param, on, om)
-        
+            # (num_tests, num_nodes, avg_degree, max_degree, mix_param, on, om)        
             (3, 500, 10, 30, 0.05, 30, 2),           
             (3, 1000, 10, 30, 0.1, 30, 2),         
         ]
     else:
         test_configs = [
-            # (num_tests, num_nodes, avg_degree, max_degree, mix_param, on, om)
-        
+            # (num_tests, num_nodes, avg_degree, max_degree, mix_param, on, om)        
             (3, 500, 10, 30, 0.05, 0, 0),            
             (3, 1000, 10, 30, 0.1, 0, 0),          
         ]
@@ -120,9 +102,4 @@ def generate_configured_datasets(enableOverlap):
             convert_generated_files_into_my_format(dataset_id)
             dataset_id += 1
 
-    print("\nTüm veri setleri başarıyla üretildi ve kaydedildi.")
-
-
-
-
-    
+    print("Dataset generation is successfull.")
